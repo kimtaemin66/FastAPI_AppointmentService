@@ -27,6 +27,11 @@ dependencies = [
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 ```
+**- 필요 패키지 설치하기**
+```
+poetry add sqlmodel, sqlalchemy-utc, 
+```
+
 **- FastAPI 실행하기**
 ```python
 fastapi dev app.py
