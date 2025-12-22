@@ -61,7 +61,7 @@ class OAuthAccount(SQLModel, table=True):
     __table_args__= (
         UniqueConstraint(
            "provider", 
-            "provide_account_id", 
+            "provider_account_id", 
             name="uq_provider_provider_account_id"
         ),
     )
