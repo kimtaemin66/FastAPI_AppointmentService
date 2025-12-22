@@ -29,7 +29,7 @@ build-backend = "poetry.core.masonry.api"
 ```
 **- 필요 패키지 설치하기**
 ```
-poetry add sqlmodel, sqlalchemy-utc, aiosqlite
+poetry add sqlmodel, sqlalchemy-utc, aiosqlite, alembic
 ```
 
 **- FastAPI 실행하기**
