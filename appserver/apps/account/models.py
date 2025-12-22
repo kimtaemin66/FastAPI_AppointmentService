@@ -6,7 +6,7 @@ from sqlalchemy_utc import UtcDateTime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from appserver.apps.calendar.models import Calendar
+    from appserver.apps.calendar.models import Calendar, Booking
 
 class User(SQLModel, table=True):
     __tablename__="users" # 테이블 이름 지정
@@ -27,6 +27,15 @@ class User(SQLModel, table=True):
     created_at: datetime # User 모델의 데이터 생성일시와 수정일시
     updated_at: datetime
     
+    # 자료형 각주에서 자료형을 문자열로 표기하면 해당 자료형을 지연 평가함. 이를 문자열 각주 혹은 전방 참조라고 함. 아직 정의되지않은 자료형을 참조할 때 사용
+    oauth_accounts: list["OAuthAccount"] = Relationship(back_populates="user")
+    calendar: "Calendar" = Relationship(
+        back_populates="host",
+        sa_relationship_kwargs={"uselist": False, "single_parent": True} # uselist = 관계의 다중성 여부
+    )
+    
+    bookings: list["Booking"] = Relationship(back_populates="guest")
+    
     created_at: AwareDatetime = Field(
         default=None,
         nullable=False,
@@ -44,13 +53,6 @@ class User(SQLModel, table=True):
             "server_default": func.now(),
             "onupdate": lambda: datetime.now(timezone.utc),
         },
-    )
-    
-    # 자료형 각주에서 자료형을 문자열로 표기하면 해당 자료형을 지연 평가함. 이를 문자열 각주 혹은 전방 참조라고 함. 아직 정의되지않은 자료형을 참조할 때 사용
-    oauth_accounts: list["OAuthAccount"] = Relationship(back_populates="user")
-    calendar: "Calendar" = Relationship(
-        back_populates="host",
-        sa_relationship_kwargs={"uselist": False, "single_parent": True} # uselist = 관계의 다중성 여부
     )
 
 
