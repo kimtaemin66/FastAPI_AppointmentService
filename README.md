@@ -5,10 +5,12 @@
 ```python
 pip install "fastapi[all]"
 ```
+
 **- Poetry 설치**
 ```python
 pip install poetry
 ```
+
 **- Poetry : pyproject.toml 생성**
 ```python
 [project]
@@ -27,14 +29,17 @@ dependencies = [
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 ```
+
 **- 필요 패키지 설치하기**
 ```
 poetry add sqlmodel sqlalchemy-utc aiosqlite alembic greenlet
 ```
+
 **- alembic 초기화**
 ```
 alembic init alembic
 ```
+
 **- FastAPI 실행하기**
 ```python
 fastapi dev app.py
