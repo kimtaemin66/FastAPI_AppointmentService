@@ -39,6 +39,10 @@ poetry add sqlmodel sqlalchemy-utc aiosqlite alembic greenlet
 ```
 alembic init alembic
 ```
+**- alembic으로 마이그레이션 실행**
+```
+alembic revision -m "Initialization"
+```
 
 **- FastAPI 실행하기**
 ```python
