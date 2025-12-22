@@ -31,7 +31,10 @@ build-backend = "poetry.core.masonry.api"
 ```
 poetry add sqlmodel sqlalchemy-utc aiosqlite alembic greenlet
 ```
-
+**- alembic 초기화**
+```
+alembic init alembic
+```
 **- FastAPI 실행하기**
 ```python
 fastapi dev app.py
