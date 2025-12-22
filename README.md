@@ -43,7 +43,10 @@ alembic init alembic
 ```
 alembic revision -m "Initialization"
 ```
-
+**- alembic으로 자동 마이그레이션 실행**
+```
+alembic revision --autogenerate -m "Auto generate migration"
+```
 **- FastAPI 실행하기**
 ```python
 fastapi dev app.py
