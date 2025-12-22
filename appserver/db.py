@@ -29,3 +29,9 @@ async def use_session():
 engine = create_engine()
 
 async_session_factory = create_session()
+
+DSN = "sqlite+aiosqlite:///./local.db"
+
+engine = create_engine(DSN)
+
+async_session_factory = create_session(engine)
