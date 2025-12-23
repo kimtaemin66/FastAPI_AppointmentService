@@ -4,6 +4,9 @@ from pydantic import EmailStr, AwareDatetime
 from sqlalchemy import UniqueConstraint
 from sqlalchemy_utc import UtcDateTime
 from typing import TYPE_CHECKING
+import random
+import string
+from pydantic import model_validator
 
 if TYPE_CHECKING:
     from appserver.apps.calendar.models import Calendar, Booking
@@ -19,10 +22,10 @@ class User(SQLModel, table=True):
     )
     
     id: int = Field(default=None, primary_key=True) # 기본키 id, 데이터를 가져오기 전에는 None값이 Default
-    username: str = Field(max_length=40, description="사용자 계정 ID") # 속성(Field) 선언부 unique 옵션으로 고유값 설정
+    username: str = Field(min_length=4, max_length=40, description="사용자 계정 ID") # 속성(Field) 선언부 unique 옵션으로 고유값 설정
     email: EmailStr = Field(max_length=128, description="사용자 이메일")
-    display_name: str = Field(max_length=40, description="사용자 표시 이름")
-    password: str = Field(max_length=128, description="사용자 비밀번호")
+    display_name: str = Field(min_length=4, max_length=40, description="사용자 표시 이름")
+    password: str = Field(min_length=8, max_length=128, description="사용자 비밀번호")
     is_host: bool = Field(default=False, description="사용자가 호스트인지 여부")
     created_at: datetime # User 모델의 데이터 생성일시와 수정일시
     updated_at: datetime
