@@ -32,7 +32,7 @@ build-backend = "poetry.core.masonry.api"
 
 **- 필요 패키지 설치하기**
 ```
-poetry add sqlmodel sqlalchemy-utc aiosqlite alembic greenlet
+poetry add sqlmodel sqlalchemy-utc aiosqlite alembic greenlet "pwdlib[argon2,bcrypt]"
 ```
 
 **- alembic 초기화**
