@@ -15,17 +15,16 @@ class User(SQLModel, table=True):
     __tablename__="users" # 테이블 이름 지정
     __table_args__= (
         UniqueConstraint(
-            "username", 
             "email", 
-            name="uq_username_email"
+            name="uq_email"
         ), # Field의 unique 옵션을 사용하지않고 고유값 제약을 설정. name은 해당 고유값 제약의 이름
     )
     
     id: int = Field(default=None, primary_key=True) # 기본키 id, 데이터를 가져오기 전에는 None값이 Default
     username: str = Field(min_length=4, max_length=40, description="사용자 계정 ID") # 속성(Field) 선언부 unique 옵션으로 고유값 설정
-    email: EmailStr = Field(max_length=128, description="사용자 이메일")
+    email: EmailStr = Field(unique=True, max_length=128, description="사용자 이메일")
     display_name: str = Field(min_length=4, max_length=40, description="사용자 표시 이름")
-    password: str = Field(min_length=8, max_length=128, description="사용자 비밀번호")
+    hashed_password: str = Field(min_length=8, max_length=128, description="사용자 비밀번호")
     is_host: bool = Field(default=False, description="사용자가 호스트인지 여부")
     created_at: datetime # User 모델의 데이터 생성일시와 수정일시
     updated_at: datetime
