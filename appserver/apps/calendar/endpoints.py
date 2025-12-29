@@ -9,6 +9,7 @@ from .exception import CalendarNotFoundError, HostNotFoundError
 
 router = APIRouter()
 
+@router.get("/calendar/{host_username}", status_code=status.HTTP_200_OK)
 async def host_calendar_detail(
     host_username: str,
     user: CurrentUserOptionalDep,
@@ -23,6 +24,9 @@ async def host_calendar_detail(
     stmt = select((Calendar).where(Calendar.host_id) == host.id)
     result = await session.execute(stmt)
     calendar = result.scalar_one_or_none()
+    if calendar is None:
+        raise CalendarNotFoundError()
+    
     if user is not None and user.id == host.id:
         return CalendarDetailOut.model_validate(calendar)
     
