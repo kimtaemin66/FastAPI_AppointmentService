@@ -3,7 +3,7 @@ from sqlmodel import SQLModel, Field, Relationship, func, column, AutoString
 from pydantic import EmailStr, AwareDatetime
 from sqlalchemy import UniqueConstraint
 from sqlalchemy_utc import UtcDateTime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union, Annotated
 import random
 import string
 from pydantic import model_validator
@@ -31,9 +31,9 @@ class User(SQLModel, table=True):
     
     # 자료형 각주에서 자료형을 문자열로 표기하면 해당 자료형을 지연 평가함. 이를 문자열 각주 혹은 전방 참조라고 함. 아직 정의되지않은 자료형을 참조할 때 사용
     oauth_accounts: list["OAuthAccount"] = Relationship(back_populates="user")
-    calendar: "Calendar" = Relationship(
+    calendar: Union["Calendar", None] = Relationship(
         back_populates="host",
-        sa_relationship_kwargs={"uselist": False, "single_parent": True} # uselist = 관계의 다중성 여부
+        sa_relationship_kwargs={"uselist": False, "single_parent": True, "lazy": "joined"} # uselist = 관계의 다중성 여부
     )
     
     bookings: list["Booking"] = Relationship(back_populates="guest")

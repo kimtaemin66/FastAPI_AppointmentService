@@ -5,9 +5,18 @@ from sqlalchemy_utc import UtcDateTime
 from sqlmodel import SQLModel, Field, Relationship, Text, JSON, func
 from sqlalchemy.dialects.postgresql import JSONB
 
+from fastapi_storages import FileSystemStorage
+from fastapi_storages import StorageFile
+from fastapi_storages.integrations.sqlalchemy import FileType
+from sqlmodel import Column
+from sqlmodel. main import SQLModelConfig
+
 if TYPE_CHECKING:
     from appserver.apps.account.models import User
-    
+
+model_config = SQLModelConfig(
+    arbitrary_types_allowed = True,
+)
 class Calendar(SQLModel, table=True):
     __tablename__ = "calendars"
     
@@ -91,11 +100,19 @@ class Booking(SQLModel, table=True):
     topic: str
     description: str = Field(sa_type=Text, description="예약 설명")
     
+    attendance_status: AttendanceStatus = Field(
+        default=AttendanceStatus.SCHEDULED,
+        description="참석 상태",
+        sa_type = String,
+    )
+    
     time_slot_id: int = Field(foreign_key="time_slots.id")
     time_slot: TimeSlot = Relationship(back_populates="bookings")
     
     guest_id: int = Field(foreign_key="users.id")
     guest: "User" = Relationship(back_populates="bookings")
+    
+    files: list["BookingFile"] = Relationship(back_populates="booking")
     
     created_at: AwareDatetime = Field(
         default=None,
@@ -114,4 +131,22 @@ class Booking(SQLModel, table=True):
             "server_default": func.now(),
             "onupdate": lambda: datetime.now(timezone.utc)
         },
+    )
+    
+class BookingFile(SQLModel, tabel=True):
+    __tablename__ = "booking_files"
+    
+    id: int = Field(default=None, primary_key=True)
+    
+    booking_id: int = Field(foreign_key="bookings.id")
+    booking: Booking = Relationship(back_populates="files")
+    file: StorageFile = Field(
+        exclude=True,
+        sa_column=Column(
+            FileType(storage=FileSystemStorage(path="uploads/bookings")),
+            nullable=False,
+        ),
+    )
+    model_config = SQLModelConfig(
+        arbitrary_types_allowed = True,
     )
