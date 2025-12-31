@@ -1,10 +1,11 @@
-from fastapi import APIRouter, status, UploadFile, File
-from sqlmodel import select
+from fastapi import APIRouter, status, UploadFile, File, HTTPException
+from sqlmodel import select, true
 from appserver.apps.account.models import User
-from appserver.apps.calendar.models import Calendar
+from appserver.apps.calendar.models import Calendar, Booking, BookingFile, TimeSlot
+from appserver.apps.account.schemas import UserOut
 from appserver.db import DbSessionDep
 from appserver.apps.account.deps import CurrentUserOptionalDep
-from .schemas import CalendarDetailOut, CalendarOut, CalendarUpdateIn, CalendarCreateIn
+from .schemas import CalendarDetailOut, CalendarOut, CalendarUpdateIn, CalendarCreateIn, BookingFileOut, BookingOut, TimeSlotOut
 from .exception import CalendarNotFoundError, HostNotFoundError, CalendarAlreadyExistsError, GuestPermissionError
 from sqlalchemy.exc import IntegrityError
 
@@ -100,6 +101,7 @@ async def update_calendar(
     status_code=status.HTTP_201_CREATED,
     response_model=BookingOut,
 )
+
 async def upload_booking_files(
     user: CurrentUserDep,
     booking_id: int,
@@ -109,7 +111,7 @@ async def upload_booking_files(
 ) -> BookingOut:
     stmt = (
         select(Booking)
-        .where(Booking_id == booking_id)
+        .where(BookingFile.booking_id == booking_id)
         .where(Booking.guest_id == user.id)
     )
     result = await session.execute(stmt)
@@ -123,3 +125,40 @@ async def upload_booking_files(
     await session.refresh(booking, ["files"])
     
     return booking
+
+@router.get(
+    "/hosts",
+    status_code=status.HTTP_200_OK,
+    response_model=list[UserOut],
+)
+async def get_hosts(
+    user: CurrentUserDep,
+    session: DbSessionDep,
+) -> list[User]:
+    stmt = select(User).where(User.is_active.is_(true())).where(User.is_host.is_(true()))
+    result = await session.execute(stmt)
+    return result.scalars().all()
+
+@router.get(
+    "/time-slots/{host_name}",
+    status_code=status.HTTP_200_OK,
+    response_model=list[TimeSlotOut],
+)
+async def get_host_timeslots(
+    host_username: str,
+    session: DbSessionDep,
+)->list[TimeSlotOut]:
+    stmt = (
+        select(User)
+        .where(User.username == host_username)
+        .where(User.is_active.is_(true()))
+        .where(User.is_host.is_(true()))
+    )
+    result = await session.execute(stmt)
+    host = result.scalar_one_or_none()
+    if host is None or host.calendar is None:
+        raise HostNotFoundError()
+    stmt = select(TimeSlot).where(TimeSlot.calendar_id == host.calendar.id)
+    result = await session.execute(stmt)
+    return result.scalars().all()
+    

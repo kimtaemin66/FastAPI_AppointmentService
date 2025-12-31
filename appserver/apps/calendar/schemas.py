@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, time
 from pydantic import AwareDatetime, EmailStr, AfterValidator
 from sqlmodel import SQLModel, Field
 from typing import Annotated
@@ -47,6 +47,14 @@ class BookingFileOut(SQLModel):
     model_config = SQLModelConfig(
         arbitrary_types_allowed=True,
     )
+
+class TimeSlotOut(SQLModel):
+    id: int
+    start_time: time
+    end_time: time
+    weekdays: list[int]
+    created_at: AwareDatetime
+    updated_at: AwareDatetime
 
 class BookingOut(SQLModel):
     id: int

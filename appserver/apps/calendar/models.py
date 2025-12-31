@@ -4,6 +4,8 @@ from pydantic import AwareDatetime
 from sqlalchemy_utc import UtcDateTime
 from sqlmodel import SQLModel, Field, Relationship, Text, JSON, func
 from sqlalchemy.dialects.postgresql import JSONB
+from .enums import AttendanceStatus
+import string
 
 from fastapi_storages import FileSystemStorage
 from fastapi_storages import StorageFile
@@ -103,7 +105,7 @@ class Booking(SQLModel, table=True):
     attendance_status: AttendanceStatus = Field(
         default=AttendanceStatus.SCHEDULED,
         description="참석 상태",
-        sa_type = String,
+        # sa_type = String,
     )
     
     time_slot_id: int = Field(foreign_key="time_slots.id")
