@@ -3,6 +3,7 @@ from sqlmodel import SQLModel, Field, Relationship, func, column, AutoString
 from pydantic import EmailStr, AwareDatetime
 from sqlalchemy import UniqueConstraint
 from sqlalchemy_utc import UtcDateTime
+from sqlalchemy.sql import func
 from typing import TYPE_CHECKING, Union, Annotated
 import random
 import string
@@ -27,8 +28,8 @@ class User(SQLModel, table=True):
     # hashed_password: str = Field(min_length=8, max_length=128, description="사용자 비밀번호")
     password: str = Field(min_length=8, max_length=128, description="사용자 비밀번호")
     is_host: bool = Field(default=False, description="사용자가 호스트인지 여부")
-    created_at: datetime # User 모델의 데이터 생성일시와 수정일시
-    updated_at: datetime
+    # created_at: datetime # User 모델의 데이터 생성일시와 수정일시
+    # updated_at: datetime
     
     # 자료형 각주에서 자료형을 문자열로 표기하면 해당 자료형을 지연 평가함. 이를 문자열 각주 혹은 전방 참조라고 함. 아직 정의되지않은 자료형을 참조할 때 사용
     oauth_accounts: list["OAuthAccount"] = Relationship(back_populates="user")
@@ -48,7 +49,7 @@ class User(SQLModel, table=True):
         },
     )
     
-    update_at: AwareDatetime = Field(
+    updated_at: AwareDatetime = Field(
         default=None,
         nullable=False,
         sa_type=UtcDateTime,
@@ -57,6 +58,8 @@ class User(SQLModel, table=True):
             "onupdate": lambda: datetime.now(timezone.utc),
         },
     )
+    def __str__(self) -> str:
+        return f"{self.username} ({self.email})"
 
 
 class OAuthAccount(SQLModel, table=True):
@@ -89,7 +92,7 @@ class OAuthAccount(SQLModel, table=True):
         },
     )
 
-    update_at: AwareDatetime = Field(
+    updated_at: AwareDatetime = Field(
         default=None,
         nullable=False,
         sa_type=UtcDateTime,
@@ -98,3 +101,5 @@ class OAuthAccount(SQLModel, table=True):
             "onupdate": lambda: datetime.now(timezone.utc),
         },
     )
+    def __str__(self) -> str:
+        return f"{self.username} ({self.email})"
