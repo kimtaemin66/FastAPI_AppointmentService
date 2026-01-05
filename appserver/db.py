@@ -30,15 +30,11 @@ async def use_session():
     async with async_session_factory() as session:
         yield session
 
+DbSessionDep = Annotated[AsyncSession, Depends(use_session)]
+
 #alembic 전용
 DSN = "sqlite+aiosqlite:///./local.db"
 
 engine = create_engine(DSN)
 
 async_session_factory = create_session(engine)
-
-# engine = create_engine()
-
-# async_session_factory = create_session()
-
-DbSessionDep = Annotated[AsyncSession, Depends(use_session)]

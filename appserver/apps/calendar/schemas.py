@@ -6,6 +6,7 @@ from appserver.libs.collections.sort import deduplicate_and_sort
 from .enums import AttendanceStatus
 from sqlmodel.main import SQLModelConfig
 from fastapi_storages import StorageFile
+from appserver.apps.account.schemas import UserOut
 
 class CalendarOut(SQLModel):
     topics: list[str]
@@ -62,7 +63,12 @@ class BookingOut(SQLModel):
     topic: str
     description: str
     time_slot: TimeSlotOut
+    host: UserOut
     attendance_status: AttendanceStatus
     files: list[BookingFileOut]
     created_at: AwareDatetime
     updated_at: AwareDatetime
+    
+class PaginatedBookingOut(SQLModel):
+    bookings: list[BookingOut]
+    total_count: int

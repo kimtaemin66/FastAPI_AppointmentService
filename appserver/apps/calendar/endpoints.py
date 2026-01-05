@@ -1,18 +1,18 @@
-from fastapi import APIRouter, status, UploadFile, File, HTTPException
-from sqlmodel import select, true
+from fastapi import APIRouter, Query, status, UploadFile, File, HTTPException
+from sqlmodel import select, true, func
 from appserver.apps.account.models import User
 from appserver.apps.calendar.models import Calendar, Booking, BookingFile, TimeSlot
 from appserver.apps.account.schemas import UserOut
 from appserver.db import DbSessionDep
 from appserver.apps.account.deps import CurrentUserOptionalDep
-from .schemas import CalendarDetailOut, CalendarOut, CalendarUpdateIn, CalendarCreateIn, BookingFileOut, BookingOut, TimeSlotOut
+from .schemas import CalendarDetailOut, CalendarOut, CalendarUpdateIn, CalendarCreateIn, BookingFileOut, BookingOut, TimeSlotOut, PaginatedBookingOut
 from .exception import CalendarNotFoundError, HostNotFoundError, CalendarAlreadyExistsError, GuestPermissionError
 from sqlalchemy.exc import IntegrityError
-
+from sqlalchemy.orm import selectinload
 from appserver.apps.account.deps import CurrentUserDep
 from typing import Annotated
-
 from .deps import UtcNow
+from fastapi.responses import StreamingResponse
 
 router = APIRouter()
 
@@ -111,7 +111,7 @@ async def upload_booking_files(
 ) -> BookingOut:
     stmt = (
         select(Booking)
-        .where(BookingFile.booking_id == booking_id)
+        .where(Booking.id == booking_id)
         .where(Booking.guest_id == user.id)
     )
     result = await session.execute(stmt)
@@ -161,4 +161,49 @@ async def get_host_timeslots(
     stmt = select(TimeSlot).where(TimeSlot.calendar_id == host.calendar.id)
     result = await session.execute(stmt)
     return result.scalars().all()
+
+@router.get(
+    "/calendar/{host_username}/bookings/stream",
+    status_code=status.HTTP_200_OK,
+    )
+async def host_calendar_bookings_stream(
+    host_username: str,
+    session: DbSessionDep,
+    year: Annotated[int, Query(ge=2024, le=2025)],
+    month: Annotated[int, Query(ge=1, le=12)],
+) -> StreamingResponse:
+    async def _stream_bookings():
+        yield ""
+    return StreamingResponse(
+        _stream_bookings(),
+        media_type="application/x-ndjson",
+        status_code=status.HTTP_200_OK,
+    )
     
+@router.get(
+    "/guest-calendar/bokings",
+    status_code=status.HTTP_200_OK,
+    response_model=PaginatedBookingOut,
+)
+async def guest_calendar_bookings(
+    user: CurrentUserDep,
+    session: DbSessionDep,
+    page: Annotated[int, Query(ge=1)],
+    page_size: Annotated[int, Query(ge=1, le=50)],
+)->PaginatedBookingOut:
+    stmt = (
+        select(Booking)
+        .options(selectinload(Booking.files))
+        .where(Booking.guest_id == user.id)
+        .order_by(Booking.when.desc(), Booking.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    )
+    result = await session.execute(stmt)
+    count_stmt = select(func.count()).select_from(Booking).where(Booking.guest_id == user.id)
+    count_result = await session.execute(count_stmt)
+    
+    return PaginatedBookingOut(
+        bookings = result.unique().scalars().all(),
+        total_count=count_result.scalar_one_or_none() or 0,
+    )

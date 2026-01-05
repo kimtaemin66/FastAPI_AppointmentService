@@ -24,7 +24,8 @@ class User(SQLModel, table=True):
     username: str = Field(min_length=4, max_length=40, description="사용자 계정 ID") # 속성(Field) 선언부 unique 옵션으로 고유값 설정
     email: EmailStr = Field(unique=True, max_length=128, description="사용자 이메일")
     display_name: str = Field(min_length=4, max_length=40, description="사용자 표시 이름")
-    hashed_password: str = Field(min_length=8, max_length=128, description="사용자 비밀번호")
+    # hashed_password: str = Field(min_length=8, max_length=128, description="사용자 비밀번호")
+    password: str = Field(min_length=8, max_length=128, description="사용자 비밀번호")
     is_host: bool = Field(default=False, description="사용자가 호스트인지 여부")
     created_at: datetime # User 모델의 데이터 생성일시와 수정일시
     updated_at: datetime

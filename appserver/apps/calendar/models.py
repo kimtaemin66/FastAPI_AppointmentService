@@ -1,6 +1,6 @@
 from datetime import date, time, timezone, datetime
 from typing import TYPE_CHECKING
-from pydantic import AwareDatetime
+from pydantic import AwareDatetime, computed_field
 from sqlalchemy_utc import UtcDateTime
 from sqlmodel import SQLModel, Field, Relationship, Text, JSON, func
 from sqlalchemy.dialects.postgresql import JSONB
@@ -102,6 +102,7 @@ class Booking(SQLModel, table=True):
     topic: str
     description: str = Field(sa_type=Text, description="예약 설명")
     
+    #참석 상태 종류
     attendance_status: AttendanceStatus = Field(
         default=AttendanceStatus.SCHEDULED,
         description="참석 상태",
@@ -109,12 +110,21 @@ class Booking(SQLModel, table=True):
     )
     
     time_slot_id: int = Field(foreign_key="time_slots.id")
-    time_slot: TimeSlot = Relationship(back_populates="bookings")
+    time_slot: TimeSlot = Relationship(
+        back_populates="bookings",
+        sa_relationship_kwargs={"lazy": "joined"},
+        )
     
     guest_id: int = Field(foreign_key="users.id")
-    guest: "User" = Relationship(back_populates="bookings")
+    guest: "User" = Relationship(
+        back_populates="bookings",
+        sa_relationship_kwargs={"lazy": "joined"},
+        )
     
-    files: list["BookingFile"] = Relationship(back_populates="booking")
+    files: list["BookingFile"] = Relationship(
+        back_populates="booking",
+        sa_relationship_kwargs={"lazy": "joined"},
+        )
     
     created_at: AwareDatetime = Field(
         default=None,
@@ -135,13 +145,20 @@ class Booking(SQLModel, table=True):
         },
     )
     
-class BookingFile(SQLModel, tabel=True):
+    @computed_field
+    @property
+    def host(self) -> "User":
+        return self.time_slot.calendar.host
+    
+class BookingFile(SQLModel, table=True):
     __tablename__ = "booking_files"
     
     id: int = Field(default=None, primary_key=True)
-    
     booking_id: int = Field(foreign_key="bookings.id")
-    booking: Booking = Relationship(back_populates="files")
+    booking: Booking = Relationship(
+        back_populates="files",
+        sa_relationship_kwargs={"lazy": "noload"},
+    )
     file: StorageFile = Field(
         exclude=True,
         sa_column=Column(
@@ -152,3 +169,6 @@ class BookingFile(SQLModel, tabel=True):
     model_config = SQLModelConfig(
         arbitrary_types_allowed = True,
     )
+    
+    def __str__(self):
+        return self.file.name

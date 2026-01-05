@@ -14,6 +14,8 @@ ${imports if imports else ""}
 import sqlalchemy_utc
 import sqlmodel.sql.sqltypes
 from sqlmodel import Text
+import fastapi_storages
+from fastapi_storages import FileSystemStorage
 
 # revision identifiers, used by Alembic.
 revision: str = ${repr(up_revision)}
