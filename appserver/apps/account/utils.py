@@ -9,14 +9,6 @@ SECRET_KEY = "your-secret-key-here"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-def hash_password(password: str) -> str:
-    password_hash = PasswordHash((Argon2Hasher(), BcryptHasher()))
-    return password_hash.hash(password)
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    password_hash = PasswordHash((Argon2Hasher(), BcryptHasher()))
-    return password_hash.verify(plain_password, hash_password)
-
 def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None) -> str:
     to_encode = data.copy()
     now = datetime.now(timezone.utc)
@@ -31,3 +23,11 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
 
 def decode_token(token: str) -> dict:
     return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+
+def hash_password(password: str) -> str:
+    password_hash = PasswordHash((Argon2Hasher(), BcryptHasher()))
+    return password_hash.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    password_hash = PasswordHash((Argon2Hasher(), BcryptHasher()))
+    return password_hash.verify(plain_password, hashed_password)

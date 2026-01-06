@@ -14,6 +14,11 @@ def include_routers(_app: FastAPI):
     _app.include_router(account_router)
     _app.include_router(calendar_router)
 
+    # /static 경로로 요청이 들어오면, StaticFIles 앱으로 처리
+    _app.mount("/static", StaticFiles(directory="static"), name="static")
+    # /uploads 경로로 요청이 들어오면, StaticFIles 앱으로 처리
+    _app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
 include_routers(app)
 
 def init_admin(_app: FastAPI, _engine: AsyncEngine):
@@ -21,19 +26,14 @@ def init_admin(_app: FastAPI, _engine: AsyncEngine):
 
 admin = init_admin(app, engine)
 include_admin_views(admin)
-    
-#     # /static 경로로 요청이 들어오면, StaticFIles 앱으로 처리
-#     _app.mount("/static", StaticFiles(directory="static"), name="static")
-#     # /uploads 경로로 요청이 들어오면, StaticFIles 앱으로 처리
-#     _app.mount("uploads", StaticFiles(directory="uploads"), name="uploads")
 
-# def init_middleware(_app: FastAPI):
-#     _app.add_middleware(
-#         CORSMiddleware,
-#         allow_origins=["*"],
-#         allow_credentials=True,
-#         allow_methods=["*"],
-#         allow_headers=["*"],
-#     )
+def init_middleware(_app: FastAPI):
+    _app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
-# init_middleware(app)
+init_middleware(app)

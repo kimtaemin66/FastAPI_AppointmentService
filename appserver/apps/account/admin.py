@@ -2,6 +2,9 @@ from sqladmin import ModelView
 from .models import User, OAuthAccount
 from datetime import datetime
 import wtforms as wtf
+from appserver.apps.account.utils import hash_password
+from fastapi import Request
+from typing import Any
 
 class UserAdmin(ModelView, model=User):
     category = "계정"
@@ -36,7 +39,13 @@ class UserAdmin(ModelView, model=User):
     }
     column_default_sort = (User.created_at, True)
     
-    form_columns = [User.email, User.username, User.display_name, User.is_host, User.password]
+    form_columns = [
+        User.email, 
+        User.username, 
+        User.display_name, 
+        User.is_host, 
+        User.hashed_password]
+    
     form_overrides = {
         "email": wtf.EmailField,
     }
@@ -49,6 +58,18 @@ class UserAdmin(ModelView, model=User):
             "order_by": "id",
         },
     }
+    
+    async def insert_model(self, request: Request, data: dict) -> Any:
+        data["hashed_password"] = hash_password(data["hashed_password"])
+        return await super().insert_model(request, data)
+    
+    async def update_model(self, request: Request, pk: str, data: dict) -> Any:
+        async with self.session_maker() as session:
+            obj: User = await session.get(User, pk)
+            
+        if obj.hashed_password != data["hashed_password"]:
+            data["hashed_password"] = hash_password(data["hashed_password"])
+        return await super().update_model(request, pk, data)
 
 class OAuthAccountAdmin(ModelView, model=OAuthAccount):
     category = "계정"

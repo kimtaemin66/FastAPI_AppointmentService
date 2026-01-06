@@ -1,7 +1,7 @@
 from datetime import datetime, timezone, timedelta
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, HTTPException, status
-from sqlmodel import select, SQLModel, func, update, delete
+from sqlmodel import select, SQLModel, func, update, delete, true
 from appserver.db import create_async_engine, create_session
 from .models import User
 from appserver.db import DbSessionDep
@@ -50,6 +50,13 @@ async def login(payload: LoginPayload, session: DbSessionDep) -> User:
     
     if user is None:
         raise UserNotFoundError()
+
+    print("\n" + "="*30)
+    print(f"[DEBUG] DB File Path Check: {session.bind.url}") # 현재 연결된 DB 파일 경로 출력
+    print(f"[DEBUG] User ID: {user.id}")
+    print(f"[DEBUG] Username: {user.username}")
+    print(f"[DEBUG] Hashed Password (Raw): {repr(user.hashed_password)}") # None인지 문자열인지 확인
+    print("="*30 + "\n")
     
     is_valid = verify_password(payload.password, user.hashed_password)
     if not is_valid:
@@ -68,31 +75,34 @@ async def login(payload: LoginPayload, session: DbSessionDep) -> User:
     response_data = {
         "access_token": access_token,
         "token_type": "bearer",
-        "user": user.model_dump(model="json", exclude={"hashed_password", "email"})
+        "user": user.model_dump(mode="json", exclude={"hashed_password", "email"})
     }
     
     now = datetime.now(timezone.utc)
     
     res = JSONResponse(response_data, status_code=status.HTTP_200_OK)
     res.set_cookie(
-        key="AUTH_TOKEN_COOKIE_NAME",
+        key=AUTH_TOKEN_COOKIE_NAME,
         value=access_token,
         expires=now+timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
         httponly=True,
-        secure=True,
+        secure=False,
         samesite="strict"
     )
     
     return res 
 
 @router.get("/@me", response_model=UserDetailOut)
+async def me(user: CurrentUserDep) -> User:
+    return user
+
+@router.patch("/@me", response_model=UserDetailOut)
 async def update_user(
     user: CurrentUserDep,
     payload: UpdateUserPayload,
     session: DbSessionDep
-    ) -> User:
-    update_data = payload.model_dump(exclude_none=True, exclude={"password",
-                                                                 "password_again"})
+) -> User:
+    update_data = payload.model_dump(exclude_none=True, exclude={"password", "password_again"})
     
     stmt = update(User).where(User.username == user.username).values(**update_data)
     await session.execute(stmt)
@@ -110,3 +120,16 @@ async def unregister(user: CurrentUserDep, session: DbSessionDep) -> None:
     stmt = delete(User).where(User.username == user.username)
     await session.commit()
     return None
+
+@router.get(
+    "/hosts",
+    status_code=status.HTTP_200_OK,
+    response_model=list[UserOut],
+)
+async def get_hosts(
+    user: CurrentUserDep,
+    session: DbSessionDep,
+) -> list[User]:
+    stmt = select(User).where(User.is_active.is_(true())).where(User.is_host.is_(true()))
+    result = await session.execute(stmt)
+    return result.scalars().all()

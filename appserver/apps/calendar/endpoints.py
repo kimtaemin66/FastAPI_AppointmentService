@@ -14,6 +14,7 @@ from typing import Annotated
 from .deps import UtcNow
 from fastapi.responses import StreamingResponse
 
+
 router = APIRouter()
 
 @router.get("/calendar/{host_username}", status_code=status.HTTP_200_OK)
@@ -24,11 +25,11 @@ async def host_calendar_detail(
 ) -> CalendarOut | CalendarDetailOut:
     stmt = select(User).where(User.username == host_username)
     result = await session.execute(stmt)
-    host = result.scalar_one_or_none
+    host = result.scalar_one_or_none()
     if host is None:
         raise HostNotFoundError()
     
-    stmt = select((Calendar).where(Calendar.host_id) == host.id)
+    stmt = select(Calendar).where(Calendar.host_id == host.id)
     result = await session.execute(stmt)
     calendar = result.scalar_one_or_none()
     if calendar is None:
@@ -125,19 +126,6 @@ async def upload_booking_files(
     await session.refresh(booking, ["files"])
     
     return booking
-
-@router.get(
-    "/hosts",
-    status_code=status.HTTP_200_OK,
-    response_model=list[UserOut],
-)
-async def get_hosts(
-    user: CurrentUserDep,
-    session: DbSessionDep,
-) -> list[User]:
-    stmt = select(User).where(User.is_active.is_(true())).where(User.is_host.is_(true()))
-    result = await session.execute(stmt)
-    return result.scalars().all()
 
 @router.get(
     "/time-slots/{host_name}",

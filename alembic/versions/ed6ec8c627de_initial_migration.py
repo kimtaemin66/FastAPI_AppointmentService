@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: d603cc7f374c
+Revision ID: ed6ec8c627de
 Revises: 
-Create Date: 2026-01-05 15:54:00.518827
+Create Date: 2026-01-06 11:00:25.942929
 
 """
 from typing import Sequence, Union
@@ -18,7 +18,7 @@ import fastapi_storages
 from fastapi_storages import FileSystemStorage
 
 # revision identifiers, used by Alembic.
-revision: str = 'd603cc7f374c'
+revision: str = 'ed6ec8c627de'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -32,8 +32,9 @@ def upgrade() -> None:
     sa.Column('username', sqlmodel.sql.sqltypes.AutoString(length=40), nullable=False),
     sa.Column('email', sqlmodel.sql.sqltypes.AutoString(length=128), nullable=False),
     sa.Column('display_name', sqlmodel.sql.sqltypes.AutoString(length=40), nullable=False),
-    sa.Column('password', sqlmodel.sql.sqltypes.AutoString(length=128), nullable=False),
+    sa.Column('hashed_password', sqlmodel.sql.sqltypes.AutoString(length=128), nullable=False),
     sa.Column('is_host', sa.Boolean(), nullable=False),
+    sa.Column('status', sa.String(), nullable=False),
     sa.Column('created_at', sqlalchemy_utc.sqltypes.UtcDateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
     sa.Column('updated_at', sqlalchemy_utc.sqltypes.UtcDateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
     sa.PrimaryKeyConstraint('id'),
