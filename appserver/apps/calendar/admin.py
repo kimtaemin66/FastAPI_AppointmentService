@@ -56,7 +56,8 @@ class CalendarAdmin(ModelView, model=Calendar):
             "order_by": "id",
         },
     }
-    
+
+WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"]
 class TimeSlotAdmin(ModelView, model=TimeSlot):
     category = "캘린더"
     name = "타임슬롯"
@@ -84,7 +85,7 @@ class TimeSlotAdmin(ModelView, model=TimeSlot):
         TimeSlot.end_time,
     ]
     column_formatters = {
-        TimeSlot.weekdays: lambda m, r: ",".join([t for t in m.weekdays]),
+        TimeSlot.weekdays: lambda m, r: ", ".join([WEEKDAYS[w] for w in m.weekdays]),
     }
     form_ajax_refs = {
         "calendar": {

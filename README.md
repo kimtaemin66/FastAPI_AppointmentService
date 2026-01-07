@@ -51,3 +51,5 @@ alembic revision --autogenerate -m "Auto generate migration"
 ```python
 fastapi dev app.py
 ```
+
+sa.Column('file', fastapi_storages.integrations.sqlalchemy.FileType(storage=FileSystemStorage(path="uploads/bookings")), nullable=False),
